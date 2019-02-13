@@ -1,0 +1,22 @@
+{
+  "name": "bamazon",
+  "version": "1.0.0",
+  "description": "bamazon",
+  "main": "bamazonCustomer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mhoef23/bamazon.git"
+  },
+  "author": "Mark Hoefer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mhoef23/bamazon/issues"
+  },
+  "homepage": "https://github.com/mhoef23/bamazon#readme",
+  "dependencies": {
+    "inquirer": "^6.2.2"
+  }
+}
