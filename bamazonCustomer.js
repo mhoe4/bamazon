@@ -14,6 +14,7 @@
 //    * Once the update goes through, show the customer the total cost of their purchase.
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+
 // create the connection information for the sql database
 var connection = mysql.createConnection({
   host: "localhost",
@@ -30,52 +31,105 @@ var connection = mysql.createConnection({
 });
 
 // connect to the mysql server and sql database
-connection.connect(function(err) {
+connection.connect(function (err) {
   if (err) throw err;
   // run the start function after the connection is made to prompt the user
   start();
 });
 
-
+// function which prompts the user for what action they should take
 function start() {
-  connection.query("SELECT * FROM products", function(err, res) {
-    if (err) throw err;
-    console.log(res);
+  var query = "SELECT * FROM products";
+  connection.query(query, function (err, res) {
     console.table(res);
+    //console.log(res[0].item_id);
+    var choiceArray = [];
+    for (var i = 0; i < res.length; i++) {
+      choiceArray.push(res[i].item_id.toString() + ' - ' + res[i].product_name);
+    }
 
-
-    inquirer
-    .prompt({
-      name: "buyId",
-      type: "rawlist",choices: function() {
-        var choiceArray = [];
-        for (var i = 0; i < res.length; i++) {
-          choiceArray.push(res[i].item_id);
-        }
-        return choiceArray;
-      },
-      message: "What is the id of the product you would like to buy?"
-      
-    })
-    .then(function(answer) {
-      //numberOfItems(answer);
-    });
-
-
-    connection.end();
+    selectItem(choiceArray);
   });
-
-  
 }
 
-function numberOfItems(itemId) {
+function selectItem(choiceArray) {
+  console.log(choiceArray);
   inquirer
-    .prompt({
-      name: "numItems",
-      type: "input",
-      message: "How many of this item would you like to purchase?"
-    })
-    .then(function(answer) {
-      console.log(answer);
+    .prompt([
+      {
+        name: "item",
+        type: "list",
+        message: "Which item would you like to purchase?",
+        choices: choiceArray
+      },
+      {
+        name: "numberUnits",
+        type: "number",
+        message: "How many units?"
+      }
+    ])
+    .then(function (answer) {
+      //console.log('selectItem() .then clause');
+      checkUnits(parseInt(answer.numberUnits), answer.item.split('-')[0]);
+
+
+    }).catch(function (err) {
+      console.log(err);
     });
+}
+function checkUnits(numberUnits, item_id) {
+  //console.log("item #: " + item_id);
+  var query = "SELECT stock_quantity, price FROM products WHERE item_id = " + item_id;
+  connection.query(query, function (err, res) {
+    //console.log(res[0].stock_quantity >= numberUnits);
+    if (numberUnits > 0) {
+      if (res[0].stock_quantity >= numberUnits) {
+        //update table and show new remaining and the price\
+        //updateStock(numberUnits);
+
+        //console.log(parseInt(res[0].stock_quantity) - numberUnits);
+        var total = res[0].price*numberUnits;
+        updateStock((res[0].stock_quantity - numberUnits), item_id, total);
+      }
+      else {
+
+        console.log('Insufficient Quantity! (please select a lower quantity)');
+        console.log('# of units remaining: ' + res[0].stock_quantity);
+        redoNumberUnits(item_id);
+      }
+    } else {
+      console.log('Thanks! Have a Great Day!');
+      connection.end();
+    }
+
+  });
+}
+function redoNumberUnits(item_id) {
+  inquirer
+    .prompt(
+      {
+        name: "numberUnits",
+        type: "number",
+        message: "How many units?"
+      }
+    )
+    .then(function (answer) {
+      checkUnits(parseInt(answer.numberUnits), item_id);
+
+
+    }).catch(function (err) {
+      console.log(err);
+    });
+}
+
+function updateStock(remainingUnits, item_id, total) {
+  console.log(`Remaining Units: ${remainingUnits}`);
+  var query = `UPDATE products SET stock_quantity = ${remainingUnits} WHERE item_id =  ${item_id};`;
+  connection.query(query, function (err, res) {
+    
+    console.log(`Total Price = $${total}`); 
+    
+    console.log('Thanks! Have a Wonderful Day!');
+    connection.end();
+  });
 }
