@@ -64,6 +64,7 @@ function selectItem(choiceArray) {
       console.log(err);
     });
 }
+
 function checkUnits(numberUnits, item_id) {
   //console.log("item #: " + item_id);
   var query = "SELECT stock_quantity, price FROM products WHERE item_id = " + item_id;
@@ -71,19 +72,17 @@ function checkUnits(numberUnits, item_id) {
     //console.log(res[0].stock_quantity >= numberUnits);
     if (numberUnits > 0) {
       if (res[0].stock_quantity >= numberUnits) {
-        //update table and show new remaining and the price\
-        //updateStock(numberUnits);
-
         //console.log(parseInt(res[0].stock_quantity) - numberUnits);
-        var total = res[0].price*numberUnits;
-        console.log(`Remaining Units: ${(res[0].stock_quantity - numberUnits)}`);
-        console.log(`Total Price = $${total}`); 
-        updateStock((res[0].stock_quantity - numberUnits), item_id);
+        var totalPrice = res[0].price*numberUnits;
+        var stock_remaining = res[0].stock_quantity - numberUnits;
+        console.log(`Remaining Units: ${stock_remaining}`);
+        console.log(`Total Price = $${totalPrice}`); 
+        updateStock(stock_remaining, item_id);
       }
       else {
 
         console.log('Insufficient Quantity! (please select a lower quantity)');
-        console.log('# of units remaining: ' + res[0].stock_quantity);
+        console.log('# of units in stock: ' + res[0].stock_quantity);
         redoNumberUnits(item_id);
       }
     } else {
@@ -111,10 +110,11 @@ function redoNumberUnits(item_id) {
     });
 }
 
-function updateStock(remainingUnits, item_id) {
-  var query = `UPDATE products SET stock_quantity = ${remainingUnits} WHERE item_id =  ${item_id};`;
+function updateStock(stock_remaining, item_id) {
+  var query = `UPDATE products SET stock_quantity = ${stock_remaining} WHERE item_id =  ${item_id};`;
   connection.query(query, function (err, res) {
     console.log('Thanks! Have a Wonderful Day!');
+    //console.log(res);
     connection.end();
   });
 }
